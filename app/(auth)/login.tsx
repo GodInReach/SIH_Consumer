@@ -12,16 +12,13 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Wrench, Globe, Check, ArrowRight, ShieldCheck, User, Lock, Phone, Sparkles, AlertCircle, Mail } from 'lucide-react-native';
+import { Wrench, Check, ArrowRight, ShieldCheck, User, Lock, Phone, AlertCircle, Mail } from 'lucide-react-native';
 import { useApp, SupportedLanguage } from '../../context/AppContext';
-import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { supabase } from '../../services/supabase';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { language, setLanguage, setUser } = useApp();
-  const { isLoaded: isSignInLoaded, signIn, setActive: setSignInActive } = useSignIn();
-  const { isLoaded: isSignUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -30,8 +27,6 @@ export default function LoginScreen() {
   // Register fields
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
-  const [code, setCode] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -46,64 +41,46 @@ export default function LoginScreen() {
     setErrorMsg('');
 
     try {
-      if (isSignInLoaded && signIn) {
-        try {
-          const attempt = await signIn.create({
-            identifier: email.trim(),
-            password: password.trim(),
-          });
-          if (attempt.status === 'complete' && setSignInActive) {
-            await setSignInActive({ session: attempt.createdSessionId });
-          }
-        } catch (_) {}
-      }
-
       const cleanEmail = email.trim().toLowerCase();
-      const usernamePart = cleanEmail.split('@')[0];
 
-      let { data } = await supabase
+      // Look up user by email (exact match, case-insensitive)
+      const { data: rows, error: fetchErr } = await supabase
         .from('user_profiles')
         .select('*')
-        .or(`email.ilike.${cleanEmail},username.ilike.${usernamePart}`)
+        .ilike('email', cleanEmail)
         .limit(1);
 
-      let userRecord = data && data.length > 0 ? data[0] : null;
+      if (fetchErr) {
+        setLoading(false);
+        setErrorMsg('Error connecting to server. Please try again.');
+        return;
+      }
+
+      const userRecord = rows && rows.length > 0 ? rows[0] : null;
 
       if (!userRecord) {
-        // Create customer profile on the fly
-        const newId = 'u_' + Date.now();
-        const { data: created } = await supabase
-          .from('user_profiles')
-          .insert([{
-            id: newId,
-            user_id: newId,
-            name: usernamePart,
-            username: usernamePart,
-            email: cleanEmail,
-            password: password.trim(),
-            phone: '',
-            home_address: 'Anna Nagar West, Chennai',
-            home_lat: 13.0827,
-            home_lng: 80.2707,
-            preferred_language: language,
-          }])
-          .select()
-          .single();
-        userRecord = created;
+        setLoading(false);
+        setErrorMsg('No account found with this email. Please register first.');
+        return;
+      }
+
+      // Verify password
+      if (userRecord.password && userRecord.password !== password.trim()) {
+        setLoading(false);
+        setErrorMsg('Incorrect password. Please try again.');
+        return;
       }
 
       setLoading(false);
-      if (userRecord) {
-        setUser(userRecord);
-        if (!userRecord.phone || userRecord.name === 'New User') {
-          router.replace('/(auth)/setup');
-        } else {
-          router.replace('/(tabs)');
-        }
+      setUser(userRecord);
+      if (!userRecord.phone || userRecord.phone.trim() === '') {
+        router.replace('/(auth)/setup');
+      } else {
+        router.replace('/(tabs)');
       }
     } catch (e: any) {
       setLoading(false);
-      setErrorMsg(e.message || 'Sign in failed.');
+      setErrorMsg(e.message || 'Sign in failed. Please try again.');
     }
   };
 
@@ -112,78 +89,70 @@ export default function LoginScreen() {
       setErrorMsg('Please fill in Name, Email, and Password.');
       return;
     }
+    if (password.trim().length < 6) {
+      setErrorMsg('Password must be at least 6 characters.');
+      return;
+    }
 
     setLoading(true);
     setErrorMsg('');
 
     try {
-      if (isSignUpLoaded && signUp) {
-        try {
-          await signUp.create({
-            emailAddress: email.trim(),
-            password: password.trim(),
-            firstName: name.trim().split(' ')[0],
-            lastName: name.trim().split(' ')[1] || '',
-          });
-        } catch (_) {}
+      const cleanEmail = email.trim().toLowerCase();
+
+      // Check if email already exists
+      const { data: existing, error: checkErr } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .ilike('email', cleanEmail)
+        .limit(1);
+
+      if (checkErr) {
+        setLoading(false);
+        setErrorMsg('Error checking account. Please try again.');
+        return;
       }
 
-      await createSupabaseProfile();
-    } catch (e: any) {
-      await createSupabaseProfile();
-    }
-  };
-
-  const handleVerifyEmail = async () => {
-    if (!code.trim()) return;
-    setLoading(true);
-    try {
-      if (isSignUpLoaded && signUp) {
-        const complete = await signUp.attemptEmailAddressVerification({ code: code.trim() });
-        if (complete.status === 'complete' && setSignUpActive) {
-          await setSignUpActive({ session: complete.createdSessionId });
-        }
+      if (existing && existing.length > 0) {
+        setLoading(false);
+        setErrorMsg('An account with this email already exists. Please Sign In.');
+        setMode('login');
+        return;
       }
-      await createSupabaseProfile();
-    } catch (e: any) {
+
+      // Create profile — let DB auto-generate UUID
+      const { data, error: insertErr } = await supabase
+        .from('user_profiles')
+        .insert([{
+          name: name.trim(),
+          username: cleanEmail.split('@')[0],
+          email: cleanEmail,
+          password: password.trim(),
+          phone: phone.trim() || '',
+          home_address: 'Anna Nagar West, Chennai',
+          home_lat: 13.0827,
+          home_lng: 80.2707,
+          preferred_language: language,
+        }])
+        .select()
+        .single();
+
       setLoading(false);
-      setErrorMsg(e.errors?.[0]?.longMessage || e.message || 'Invalid verification code.');
-    }
-  };
 
-  const createSupabaseProfile = async () => {
-    const cleanEmail = email.trim().toLowerCase();
-    const usernamePart = cleanEmail.split('@')[0];
-    const newId = 'u_' + Date.now();
+      if (insertErr || !data) {
+        setErrorMsg(insertErr?.message || 'Registration failed. Please try again.');
+        return;
+      }
 
-    const { data } = await supabase
-      .from('user_profiles')
-      .insert([{
-        id: newId,
-        user_id: newId,
-        name: name.trim(),
-        username: usernamePart,
-        password: password.trim(),
-        email: cleanEmail,
-        phone: phone.trim() || '',
-        home_address: 'Anna Nagar West, Chennai',
-        home_lat: 13.0827,
-        home_lng: 80.2707,
-        preferred_language: language,
-      }])
-      .select()
-      .single();
-
-    setLoading(false);
-    if (data) {
       setUser(data);
-      if (!data.phone || data.name === 'New User') {
+      if (!data.phone || data.phone.trim() === '') {
         router.replace('/(auth)/setup');
       } else {
         router.replace('/(tabs)');
       }
-    } else {
-      router.replace('/(auth)/setup');
+    } catch (e: any) {
+      setLoading(false);
+      setErrorMsg(e.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -241,7 +210,7 @@ export default function LoginScreen() {
           <View style={styles.tabToggleRow}>
             <TouchableOpacity
               style={[styles.toggleBtn, mode === 'login' && styles.toggleBtnActive]}
-              onPress={() => { setMode('login'); setErrorMsg(''); setPendingVerification(false); }}
+              onPress={() => { setMode('login'); setErrorMsg(''); }}
             >
               <Text style={[styles.toggleText, mode === 'login' && styles.toggleTextActive]}>
                 Sign In
@@ -249,7 +218,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.toggleBtn, mode === 'register' && styles.toggleBtnActive]}
-              onPress={() => { setMode('register'); setErrorMsg(''); setPendingVerification(false); }}
+              onPress={() => { setMode('register'); setErrorMsg(''); }}
             >
               <Text style={[styles.toggleText, mode === 'register' && styles.toggleTextActive]}>
                 New Customer Register
@@ -266,39 +235,7 @@ export default function LoginScreen() {
               </View>
             ) : null}
 
-            {pendingVerification ? (
-              <>
-                <Text style={styles.cardTitle}>Verify Email Address</Text>
-                <Text style={styles.cardSubtitle}>Enter 6-digit code sent to {email}</Text>
-
-                <View style={styles.inputRow}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter verification code"
-                    placeholderTextColor="#94A3B8"
-                    keyboardType="number-pad"
-                    value={code}
-                    onChangeText={setCode}
-                    autoFocus
-                  />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.primaryBtn}
-                  disabled={loading}
-                  onPress={handleVerifyEmail}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <Text style={styles.primaryBtnText}>Verify & Complete Signup</Text>
-                      <ShieldCheck size={18} color="#FFFFFF" />
-                    </>
-                  )}
-                </TouchableOpacity>
-              </>
-            ) : mode === 'login' ? (
+            {mode === 'login' ? (
               <>
                 <Text style={styles.cardTitle}>Customer Sign In</Text>
                 <Text style={styles.cardSubtitle}>
@@ -346,12 +283,21 @@ export default function LoginScreen() {
                     </>
                   )}
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.switchModeBtn}
+                  onPress={() => { setMode('register'); setErrorMsg(''); }}
+                >
+                  <Text style={styles.switchModeText}>
+                    Don't have an account? <Text style={styles.switchModeLink}>Register here</Text>
+                  </Text>
+                </TouchableOpacity>
               </>
             ) : (
               <>
                 <Text style={styles.cardTitle}>Create Account</Text>
                 <Text style={styles.cardSubtitle}>
-                  Register a new account
+                  Register a new customer account
                 </Text>
 
                 {/* Name */}
@@ -385,7 +331,7 @@ export default function LoginScreen() {
                   <Lock size={18} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Choose Password (min 8 chars)"
+                    placeholder="Choose Password (min 6 chars)"
                     placeholderTextColor="#94A3B8"
                     secureTextEntry
                     value={password}
@@ -398,7 +344,7 @@ export default function LoginScreen() {
                   <Phone size={18} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Phone number"
+                    placeholder="Phone number (optional)"
                     placeholderTextColor="#94A3B8"
                     keyboardType="phone-pad"
                     value={phone}
@@ -419,6 +365,15 @@ export default function LoginScreen() {
                       <ShieldCheck size={18} color="#FFFFFF" />
                     </>
                   )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.switchModeBtn}
+                  onPress={() => { setMode('login'); setErrorMsg(''); }}
+                >
+                  <Text style={styles.switchModeText}>
+                    Already have an account? <Text style={styles.switchModeLink}>Sign In</Text>
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -468,13 +423,6 @@ const styles = StyleSheet.create({
   },
   langSection: {
     marginBottom: 16,
-  },
-  langLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#475569',
-    marginBottom: 10,
-    alignSelf: 'center',
   },
   langGrid: {
     flexDirection: 'row',
@@ -606,6 +554,18 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '700',
+  },
+  switchModeBtn: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  switchModeText: {
+    fontSize: 13,
+    color: '#64748B',
+  },
+  switchModeLink: {
+    color: '#2563EB',
     fontWeight: '700',
   },
 });

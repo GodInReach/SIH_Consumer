@@ -1,9 +1,9 @@
 import React from 'react';
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppProvider, useApp } from '../context/AppContext';
 import { View, ActivityIndicator } from 'react-native';
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '../services/tokenCache';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -12,12 +12,9 @@ const CLERK_PUBLISHABLE_KEY =
   'pk_test_Y2xldmVyLWFpcmVkYWxlLTk2OTQuY2xlcmsuYWNjb3VudHMuZGV2JA';
 
 function LayoutContent() {
-  const { isLoading, isAuthenticated } = useApp();
-  const { isLoaded: isClerkLoaded } = useAuth();
+  const { isLoading } = useApp();
 
-  const loading = isLoading || !isClerkLoaded;
-
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
         <ActivityIndicator size="large" color="#2563EB" />

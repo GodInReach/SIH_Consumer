@@ -116,7 +116,7 @@ const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUserState] = useState<UserProfile | null>(null);
   const [language, setLanguageState] = useState<SupportedLanguage>('en');
   const [problemDraft, setProblemDraft] = useState<ProblemDraft | null>(null);
   const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
@@ -126,67 +126,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     { title: 'Work', address: 'T. Nagar, Chennai', lat: 13.0418, lng: 80.2341 }
   ]);
 
+  // On mount: restore user from storage using persisted user ID
   useEffect(() => {
-    safeStorage.getItem('@user_lang').then(lang => {
-      if (lang && (lang === 'en' || lang === 'ta' || lang === 'hi')) {
-        setLanguageState(lang as SupportedLanguage);
-      }
-    });
-
-    const loadUserProfile = async (userId: string) => {
-      const { data, error } = await supabase.from('user_profiles').select('*').eq('user_id', userId).single();
-      if (data) {
-        setUser(data as UserProfile);
-      } else {
-        const { data: userAuth } = await supabase.auth.getUser();
-        const email = userAuth.user?.email;
-        const newProfile = {
-          id: userId, // Assuming id and user_id might match or using user_id for insert
-          user_id: userId,
-          email: email,
-          name: 'New User',
-          phone: '',
-          photo_url: '',
-          preferred_language: 'en',
-          home_address: DEFAULT_ADDRESS,
-          home_lat: DEFAULT_LOCATION.latitude,
-          home_lng: DEFAULT_LOCATION.longitude
-        };
-        const { data: inserted, error: insertError } = await supabase.from('user_profiles').insert([newProfile]).select().single();
-        if (inserted) {
-          setUser(inserted as UserProfile);
+    const initUser = async () => {
+      try {
+        // Restore language preference
+        const savedLang = await safeStorage.getItem('@user_lang');
+        if (savedLang && (savedLang === 'en' || savedLang === 'ta' || savedLang === 'hi')) {
+          setLanguageState(savedLang as SupportedLanguage);
         }
-      }
-      setIsLoading(false);
-    };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        loadUserProfile(session.user.id);
-      } else {
-        setUser(null);
+        // Restore logged-in user from persisted user ID
+        const storedUserId = await safeStorage.getItem('@user_profile_id');
+        if (!storedUserId) {
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch fresh profile from DB
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', storedUserId)
+          .single();
+
+        if (data) {
+          setUserState(data as UserProfile);
+        } else {
+          // Profile not found — clear stale storage
+          await safeStorage.removeItem('@user_profile_id');
+        }
+      } catch (e) {
+        console.warn('AppContext init error:', e);
+      } finally {
         setIsLoading(false);
       }
-    });
-    
-    // Initial fetch
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        loadUserProfile(session.user.id);
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
     };
+
+    initUser();
   }, []);
+
+  const setUser = async (userData: UserProfile | null) => {
+    setUserState(userData);
+    if (userData?.id) {
+      await safeStorage.setItem('@user_profile_id', userData.id);
+    } else {
+      await safeStorage.removeItem('@user_profile_id');
+    }
+  };
 
   const setLanguage = (lang: SupportedLanguage) => {
     setLanguageState(lang);
     if (user) {
-      setUser({ ...user, preferred_language: lang } as any);
+      setUserState({ ...user, preferred_language: lang } as any);
     }
     safeStorage.setItem('@user_lang', lang);
   };
@@ -207,10 +199,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    setUserState(null);
     setActiveBooking(null);
     setProblemDraft(null);
+    await safeStorage.removeItem('@user_profile_id');
+    try { await supabase.auth.signOut(); } catch (_) {}
   };
 
   const t = (key: string): string => {
@@ -228,7 +221,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isLoading,
         isAuthenticated: !!user,
         setLanguage,
-        setUser,
+        setUser: setUser as any,
         setProblemDraft,
         setActiveBooking,
         addSavedLocation,
