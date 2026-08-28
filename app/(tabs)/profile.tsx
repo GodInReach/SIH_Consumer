@@ -85,10 +85,10 @@ export default function ProfileTab() {
         {/* Saved Locations */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>📍 Saved Locations</Text>
+            <Text style={styles.sectionTitle}>{t('saved_locations')}</Text>
             <TouchableOpacity style={styles.addBtn}>
               <Plus size={14} color="#2563EB" />
-              <Text style={styles.addBtnText}>Add New</Text>
+              <Text style={styles.addBtnText}>{t('add_new')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -105,7 +105,7 @@ export default function ProfileTab() {
 
         {/* Language Preference Switcher */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🌐 Language / மொழி</Text>
+          <Text style={styles.sectionTitle}>{t('language_section')}</Text>
           <View style={styles.langRow}>
             {[
               { code: 'en', label: 'English' },
@@ -135,14 +135,14 @@ export default function ProfileTab() {
 
         {/* Activity & Settings Links */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My Activity & Settings</Text>
+          <Text style={styles.sectionTitle}>{t('activity_and_settings')}</Text>
 
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => router.push('/(tabs)/bookings')}
           >
             <ClipboardList size={20} color="#2563EB" />
-            <Text style={styles.menuText}>Service History & Bookings</Text>
+            <Text style={styles.menuText}>{t('service_history')}</Text>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
 
@@ -151,34 +151,34 @@ export default function ProfileTab() {
             onPress={() => router.push('/(tabs)/workers')}
           >
             <Heart size={20} color="#DC2626" />
-            <Text style={styles.menuText}>Favorite Workers</Text>
+            <Text style={styles.menuText}>{t('favorite_workers')}</Text>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Alert.alert('Notifications', 'Push notifications enabled')}
+            onPress={() => Alert.alert(t('notifications'), 'Push notifications enabled')}
           >
             <Bell size={20} color="#D97706" />
-            <Text style={styles.menuText}>Notifications</Text>
+            <Text style={styles.menuText}>{t('notifications')}</Text>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Alert.alert('Help & Support', 'Support Helpline: 1800-123-4567')}
+            onPress={() => Alert.alert(t('help_support'), 'Support Helpline: 1800-123-4567')}
           >
             <HelpCircle size={20} color="#0284C7" />
-            <Text style={styles.menuText}>Help & Customer Support</Text>
+            <Text style={styles.menuText}>{t('help_support')}</Text>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Alert.alert('Privacy', 'Your data is encrypted & secured')}
+            onPress={() => Alert.alert(t('privacy_policy'), 'Your data is encrypted & secured')}
           >
             <Shield size={20} color="#16A34A" />
-            <Text style={styles.menuText}>Privacy Policy</Text>
+            <Text style={styles.menuText}>{t('privacy_policy')}</Text>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
         </View>
@@ -186,7 +186,7 @@ export default function ProfileTab() {
         {/* Logout */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <LogOut size={20} color="#DC2626" />
-          <Text style={styles.logoutText}>Log Out</Text>
+          <Text style={styles.logoutText}>{t('logout')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

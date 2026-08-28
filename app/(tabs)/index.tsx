@@ -94,7 +94,7 @@ export default function HomeScreen() {
         <View style={styles.locationContainer}>
           <MapPin size={20} color="#2563EB" />
           <View style={styles.locationTextContainer}>
-            <Text style={styles.locationSub}>DELIVERING SERVICE TO</Text>
+            <Text style={styles.locationSub}>{t('delivering_to')}</Text>
             <TouchableOpacity style={styles.locationSelectorRow} activeOpacity={0.7}>
               <Text style={styles.locationTitle} numberOfLines={1}>
                 {user?.address || user?.home_address || 'Anna Nagar West, Chennai'}
@@ -110,7 +110,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/emergency')}
           >
             <ShieldAlert size={22} color="#FFFFFF" />
-            <Text style={styles.sosBtnText}>SOS</Text>
+            <Text style={styles.sosBtnText}>{t('sos')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -131,10 +131,10 @@ export default function HomeScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.activeTrackerTitle}>
-                {activeBooking?.worker?.name || 'Your Worker'} {t('on_the_way')} 🛵
+                {activeBooking?.worker?.name || t('worker')} {t('on_the_way')} 🛵
               </Text>
               <Text style={styles.activeTrackerSub}>
-                Status: {activeBooking.status.replace('_', ' ').toUpperCase()} • {activeBooking?.eta || 'On the way'}
+                {t('status')}: {activeBooking.status.replace('_', ' ').toUpperCase()} • {activeBooking?.eta || t('on_the_way')}
               </Text>
             </View>
             <ArrowRight size={18} color="#FFFFFF" />
@@ -146,7 +146,7 @@ export default function HomeScreen() {
 
         {/* Services Grid Header */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>What do you need?</Text>
+          <Text style={styles.sectionTitle}>{t('what_do_you_need')}</Text>
         </View>
 
         <View style={styles.servicesGrid}>
@@ -154,7 +154,7 @@ export default function HomeScreen() {
             <ServiceCard
               key={srv.id}
               id={srv.id}
-              name={srv.name}
+              name={t(srv.id) !== srv.id ? t(srv.id) : srv.name}
               iconName={srv.icon}
               onPress={() => handleSelectService(srv)}
             />
@@ -163,9 +163,9 @@ export default function HomeScreen() {
 
         {/* Trusted Nearby Workers Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>⭐ Top Rated Nearby Workers</Text>
+          <Text style={styles.sectionTitle}>{t('top_rated_workers')}</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/workers')}>
-            <Text style={styles.seeAllText}>See All</Text>
+            <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -199,7 +199,7 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.bookAgainBadge}>
-              <Text style={styles.bookAgainText}>Book</Text>
+              <Text style={styles.bookAgainText}>{t('book')}</Text>
             </View>
           </TouchableOpacity>
         ))}

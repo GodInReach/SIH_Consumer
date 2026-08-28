@@ -20,7 +20,7 @@ import { Worker, FilterOptions } from '../../types';
 
 export default function WorkersTab() {
   const router = useRouter();
-  const { user } = useApp();
+  const { user, t } = useApp();
 
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,8 +46,8 @@ export default function WorkersTab() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>All Verified Workers</Text>
-        <Text style={styles.headerSub}>Find electricians, plumbers, tailors & carpenters near you</Text>
+        <Text style={styles.headerTitle}>{t('all_verified_workers')}</Text>
+        <Text style={styles.headerSub}>{t('all_workers_sub')}</Text>
       </View>
 
       <View style={styles.searchSection}>
@@ -55,7 +55,7 @@ export default function WorkersTab() {
           <Search size={18} color="#64748B" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search workers by name or skill..."
+            placeholder={t('search_workers_placeholder')}
             placeholderTextColor="#94A3B8"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -66,10 +66,10 @@ export default function WorkersTab() {
       {/* Filter bar */}
       <View style={styles.filterRow}>
         {[
-          { id: 'rating', label: '⭐ Rating' },
-          { id: 'distance', label: '📍 Distance' },
-          { id: 'price', label: '💰 Price' },
-          { id: 'eta', label: '⚡ Fastest ETA' },
+          { id: 'rating', label: t('rating') },
+          { id: 'distance', label: t('distance') },
+          { id: 'price', label: t('price') },
+          { id: 'eta', label: t('fastest_eta') },
         ].map((item) => (
           <TouchableOpacity
             key={item.id}

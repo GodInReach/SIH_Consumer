@@ -15,6 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import { analyzeProblemText } from '../services/ai';
 import { AIAnalysisResult } from '../types';
+import { useApp } from '../context/AppContext';
 
 const SpeechModule: any = requireOptionalNativeModule('ExpoSpeechRecognition');
 
@@ -25,6 +26,7 @@ interface AIProblemIntakeCardProps {
 export const AIProblemIntakeCard: React.FC<AIProblemIntakeCardProps> = ({
   onAnalysisComplete,
 }) => {
+  const { t } = useApp();
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -152,8 +154,8 @@ export const AIProblemIntakeCard: React.FC<AIProblemIntakeCardProps> = ({
           <Sparkles size={20} color="#7C3AED" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Tell Us Your Problem 🎤 📷</Text>
-          <Text style={styles.subtitle}>Speak, type or upload a photo of the defect</Text>
+          <Text style={styles.title}>{t('tell_problem')}</Text>
+          <Text style={styles.subtitle}>{t('tell_problem_sub')}</Text>
         </View>
       </View>
 
@@ -161,7 +163,7 @@ export const AIProblemIntakeCard: React.FC<AIProblemIntakeCardProps> = ({
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.textInput}
-          placeholder="e.g. 'My fan is making noise' or 'Bathroom tap leaking'"
+          placeholder={t('describe_problem_placeholder')}
           placeholderTextColor="#94A3B8"
           value={text}
           onChangeText={(val) => {
@@ -183,13 +185,13 @@ export const AIProblemIntakeCard: React.FC<AIProblemIntakeCardProps> = ({
               <Mic size={20} color="#2563EB" />
             )}
             <Text style={[styles.iconBtnText, isRecording && { color: '#DC2626' }]}>
-              {isRecording ? 'Listening...' : 'Voice'}
+              {isRecording ? t('listening') : t('voice')}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.iconBtn} onPress={handlePickImage}>
             <Camera size={20} color="#0284C7" />
-            <Text style={styles.iconBtnText}>Photo</Text>
+            <Text style={styles.iconBtnText}>{t('photo')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -197,7 +199,7 @@ export const AIProblemIntakeCard: React.FC<AIProblemIntakeCardProps> = ({
             disabled={!text.trim() && !imageUri}
             onPress={handleTextSubmit}
           >
-            <Text style={styles.analyzeBtnText}>Analyze</Text>
+            <Text style={styles.analyzeBtnText}>{t('analyze')}</Text>
           </TouchableOpacity>
         </View>
       </View>

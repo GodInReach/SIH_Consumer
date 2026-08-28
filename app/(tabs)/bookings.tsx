@@ -82,17 +82,17 @@ export default function BookingsTab() {
           <View style={styles.activeCard}>
             <View style={styles.activeBadgeRow}>
               <View style={styles.pulseDot} />
-              <Text style={styles.activeBadgeText}>ACTIVE BOOKING IN PROGRESS</Text>
+              <Text style={styles.activeBadgeText}>{t('active_booking_in_progress')}</Text>
             </View>
 
             <View style={styles.bookingMainRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.serviceTitle}>🔧 {activeBooking.problem}</Text>
                 <Text style={styles.workerSub}>
-                  Worker: {activeBooking.worker?.name || activeBooking.workers?.name || 'Worker'}
+                  {t('worker')}: {activeBooking.worker?.name || activeBooking.workers?.name || 'Worker'}
                 </Text>
                 <Text style={styles.statusText}>
-                  Status: {activeBooking.status.replace('_', ' ').toUpperCase()}
+                  {t('status')}: {activeBooking.status.replace('_', ' ').toUpperCase()}
                 </Text>
               </View>
 
@@ -100,20 +100,20 @@ export default function BookingsTab() {
                 style={styles.trackBtn}
                 onPress={() => router.push('/booking/tracking')}
               >
-                <Text style={styles.trackBtnText}>Track Live Map</Text>
+                <Text style={styles.trackBtnText}>{t('track_live_map')}</Text>
                 <ChevronRight size={16} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Past Service History</Text>
+        <Text style={styles.sectionTitle}>{t('past_history')}</Text>
 
         {history.length === 0 ? (
           <View style={styles.emptyCard}>
             <ClipboardList size={36} color="#94A3B8" />
-            <Text style={styles.emptyTitle}>No past services yet</Text>
-            <Text style={styles.emptySub}>Book a technician to get started!</Text>
+            <Text style={styles.emptyTitle}>{t('no_past_services')}</Text>
+            <Text style={styles.emptySub}>{t('book_technician_sub')}</Text>
           </View>
         ) : (
           history.map((b) => (
@@ -123,12 +123,12 @@ export default function BookingsTab() {
                 <View style={[styles.completedBadge, b.status !== 'completed' && { backgroundColor: '#FEF2F2' }]}>
                   <CheckCircle2 size={12} color={b.status === 'completed' ? "#16A34A" : "#DC2626"} />
                   <Text style={[styles.completedText, b.status !== 'completed' && { color: '#DC2626' }]}>
-                    {b.status === 'completed' ? 'Completed' : b.status.replace('_', ' ').toUpperCase()}
+                    {b.status === 'completed' ? t('completed') : b.status.replace('_', ' ').toUpperCase()}
                   </Text>
                 </View>
               </View>
               <Text style={styles.workerSub}>
-                Worker: {b.workers?.name || b.worker?.name || 'Worker'}
+                {t('worker')}: {b.workers?.name || b.worker?.name || 'Worker'}
               </Text>
               <Text style={styles.historyDate}>
                 {new Date(b.created_at).toLocaleDateString('en-IN', {
@@ -155,7 +155,7 @@ export default function BookingsTab() {
                   }
                 >
                   <RotateCcw size={14} color="#2563EB" />
-                  <Text style={styles.rebookText}>Book Again</Text>
+                  <Text style={styles.rebookText}>{t('book_again')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
