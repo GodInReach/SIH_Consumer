@@ -18,7 +18,7 @@ import { supabase } from '../../services/supabase';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { language, setLanguage, setUser } = useApp();
+  const { language, setLanguage, setUser, t } = useApp();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -168,9 +168,9 @@ export default function LoginScreen() {
             <View style={styles.logoCircle}>
               <Wrench size={38} color="#2563EB" />
             </View>
-            <Text style={styles.appName}>Namma Service</Text>
+            <Text style={styles.appName}>Skillora</Text>
             <Text style={styles.appTagline}>
-              Instant Home Services
+              {t('instant_home_services')}
             </Text>
           </View>
 
@@ -213,7 +213,7 @@ export default function LoginScreen() {
               onPress={() => { setMode('login'); setErrorMsg(''); }}
             >
               <Text style={[styles.toggleText, mode === 'login' && styles.toggleTextActive]}>
-                Sign In
+                {t('sign_in')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -221,7 +221,7 @@ export default function LoginScreen() {
               onPress={() => { setMode('register'); setErrorMsg(''); }}
             >
               <Text style={[styles.toggleText, mode === 'register' && styles.toggleTextActive]}>
-                New Customer Register
+                {t('register_new')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -237,9 +237,9 @@ export default function LoginScreen() {
 
             {mode === 'login' ? (
               <>
-                <Text style={styles.cardTitle}>Customer Sign In</Text>
+                <Text style={styles.cardTitle}>{t('customer_sign_in')}</Text>
                 <Text style={styles.cardSubtitle}>
-                  Enter your Email and Password
+                  {t('enter_email_pass')}
                 </Text>
 
                 {/* Email */}
@@ -247,7 +247,7 @@ export default function LoginScreen() {
                   <Mail size={18} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Email address (e.g. name@example.com)"
+                    placeholder={t('email_placeholder')}
                     placeholderTextColor="#94A3B8"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -261,7 +261,7 @@ export default function LoginScreen() {
                   <Lock size={18} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Password"
+                    placeholder={t('password_placeholder')}
                     placeholderTextColor="#94A3B8"
                     secureTextEntry
                     value={password}
@@ -278,7 +278,7 @@ export default function LoginScreen() {
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <>
-                      <Text style={styles.primaryBtnText}>Sign In</Text>
+                      <Text style={styles.primaryBtnText}>{t('sign_in')}</Text>
                       <ArrowRight size={18} color="#FFFFFF" />
                     </>
                   )}
@@ -289,15 +289,15 @@ export default function LoginScreen() {
                   onPress={() => { setMode('register'); setErrorMsg(''); }}
                 >
                   <Text style={styles.switchModeText}>
-                    Don't have an account? <Text style={styles.switchModeLink}>Register here</Text>
+                    {t('no_account')} <Text style={styles.switchModeLink}>{t('register_here')}</Text>
                   </Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
-                <Text style={styles.cardTitle}>Create Account</Text>
+                <Text style={styles.cardTitle}>{t('create_account')}</Text>
                 <Text style={styles.cardSubtitle}>
-                  Register a new customer account
+                  {t('register_subtitle')}
                 </Text>
 
                 {/* Name */}
@@ -305,7 +305,7 @@ export default function LoginScreen() {
                   <User size={18} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Full Name (e.g. Anand Kumar)"
+                    placeholder={t('full_name_placeholder')}
                     placeholderTextColor="#94A3B8"
                     value={name}
                     onChangeText={setName}
@@ -317,7 +317,7 @@ export default function LoginScreen() {
                   <Mail size={18} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Email Address"
+                    placeholder={t('email_placeholder')}
                     placeholderTextColor="#94A3B8"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -331,7 +331,7 @@ export default function LoginScreen() {
                   <Lock size={18} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Choose Password (min 6 chars)"
+                    placeholder={t('password_placeholder')}
                     placeholderTextColor="#94A3B8"
                     secureTextEntry
                     value={password}
@@ -344,7 +344,7 @@ export default function LoginScreen() {
                   <Phone size={18} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Phone number (optional)"
+                    placeholder={t('phone_placeholder')}
                     placeholderTextColor="#94A3B8"
                     keyboardType="phone-pad"
                     value={phone}
@@ -361,7 +361,7 @@ export default function LoginScreen() {
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <>
-                      <Text style={styles.primaryBtnText}>Register Account</Text>
+                      <Text style={styles.primaryBtnText}>{t('register_btn')}</Text>
                       <ShieldCheck size={18} color="#FFFFFF" />
                     </>
                   )}
@@ -372,7 +372,7 @@ export default function LoginScreen() {
                   onPress={() => { setMode('login'); setErrorMsg(''); }}
                 >
                   <Text style={styles.switchModeText}>
-                    Already have an account? <Text style={styles.switchModeLink}>Sign In</Text>
+                    {t('already_have')} <Text style={styles.switchModeLink}>{t('sign_in')}</Text>
                   </Text>
                 </TouchableOpacity>
               </>

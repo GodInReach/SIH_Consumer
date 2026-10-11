@@ -53,7 +53,8 @@ export type BookingStatus =
   | 'arrived'
   | 'in_progress'
   | 'completed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'declined';
 
 export type UrgencyLevel = 'normal' | 'emergency';
 
